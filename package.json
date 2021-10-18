@@ -1,0 +1,25 @@
+{
+  "name": "@aws-template/aws-kinesis-pipeline",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "scripts": {
+    "clean": "rimraf node_modules .serverless",
+    "deploy": "serverless deploy",
+    "remove": "serverless remove"
+  },
+  "dependencies": {
+    "uuid": "8.3.2"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-kinesis": "3.36.1",
+    "@aws-sdk/client-ssm": "3.36.1",
+    "@types/aws-lambda": "8.10.84",
+    "@types/uuid": "8.3.0",
+    "rimraf": "3.0.2",
+    "serverless": "2.62.0",
+    "serverless-s3-cleaner": "1.0.1",
+    "serverless-esbuild": "1.20.0",
+    "serverless-iam-roles-per-function": "3.2.0",
+    "typescript": "4.4.4"
+  }
+}

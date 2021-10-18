@@ -1,0 +1,93 @@
+service: kinesis-pipeline
+
+variablesResolutionMode: 20210219
+
+projectDir: ..
+
+package:
+  individually: true
+  patterns:
+    - '!node_modules/**'
+    - '!.serverless/**'
+
+plugins:
+  - serverless-esbuild
+  - serverless-iam-roles-per-function
+
+custom:
+  project: awsTemplate
+  baseName: ${self:custom.project}-${self:service}-${self:provider.stage}
+
+  esbuild:
+    target: node14
+    minify: true
+    sourcemap: true
+  
+  serverless-s3-cleaner:
+    buckets:
+      - ${cf:${self:custom.baseName}.ServerlessDeploymentBucketName, ''}
+  
+  serverless-iam-roles-per-function:
+    defaultInherit: true
+
+provider:
+  name: aws
+  region: ${opt:region, 'eu-west-1'}
+  stage: ${opt:stage, 'dev'}
+  stackName: ${self:custom.baseName}
+  deploymentBucket:
+    blockPublicAccess: true
+  runtime: nodejs14.x
+  memorySize: 128
+  timeout: 60
+  versionFunctions: false
+  logRetentionInDays: 30
+  environment:
+    LOG_LEVEL: info
+  iam:
+    role:
+      name: ${self:custom.baseName}-lambda
+      statements:
+        - Effect: Allow
+          Action:
+            - kinesis:PutRecord
+          Resource: !GetAtt KinesisStream.Arn
+
+functions:
+  producer:
+    name: ${self:custom.baseName}-producer
+    handler: src/producer.handler
+    environment:
+      REGION: ${self:provider.region}
+      KINESIS_STREAM: !Ref KinesisStream
+
+  consumer:
+    name: ${self:custom.baseName}-consumer
+    handler: src/consumer.handler
+    events:
+      - stream:
+          type: kinesis
+          arn: !GetAtt KinesisStream.Arn
+          startingPosition: LATEST
+          parallelizationFactor: 5
+          batchSize: 100
+          batchWindow: 5
+          maximumRetryAttempts: 5
+          bisectBatchOnFunctionError: true
+          destinations:
+            onFailure:
+              type: sqs
+              arn: !GetAtt RecordsDLQ.Arn
+
+resources:
+  Resources:
+
+    KinesisStream:
+      Type: AWS::Kinesis::Stream
+      Properties:
+        Name: ${self:custom.baseName}
+        RetentionPeriodHours: 24
+        ShardCount: 2
+
+    RecordsDLQ:
+      Type: AWS::SQS::Queue
