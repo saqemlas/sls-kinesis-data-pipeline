@@ -7,6 +7,11 @@ This handles deployment for a kinesis data pipeline, with
 - a producer (lambda), 
 - and kinesis stream.
 
+## Architecture
+
+<p align="center">
+  <img src="/architecture-diagram.drawio.svg" />
+</p>
 
 ## Usage 
 
