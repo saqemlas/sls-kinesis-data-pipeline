@@ -1,6 +1,6 @@
 service: kinesis-pipeline
 
-variablesResolutionMode: 20210219
+variablesResolutionMode: 20210326
 
 projectDir: ..
 
