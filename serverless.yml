@@ -1,8 +1,6 @@
-service: kinesis-pipeline
+service: data-pipeline
 
 variablesResolutionMode: 20210326
-
-projectDir: ..
 
 package:
   individually: true
@@ -74,6 +72,8 @@ functions:
           batchWindow: 5
           maximumRetryAttempts: 5
           bisectBatchOnFunctionError: true
+          functionResponseType: ReportBatchItemFailures
+          # maximumRecordAgeInSeconds: 120
           destinations:
             onFailure:
               type: sqs
