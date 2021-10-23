@@ -12,7 +12,6 @@
   },
   "devDependencies": {
     "@aws-sdk/client-kinesis": "3.36.1",
-    "@aws-sdk/client-ssm": "3.36.1",
     "@types/aws-lambda": "8.10.84",
     "@types/uuid": "8.3.0",
     "rimraf": "3.0.2",

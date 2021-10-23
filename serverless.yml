@@ -1,4 +1,4 @@
-service: data-pipeline
+service: dataPipeline
 
 variablesResolutionMode: 20210326
 
@@ -50,18 +50,25 @@ provider:
           Action:
             - kinesis:PutRecord
           Resource: !GetAtt KinesisStream.Arn
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*:log-stream:*
+
 
 functions:
   producer:
     name: ${self:custom.baseName}-producer
-    handler: src/producer.handler
+    handler: src/producer/index.handler
     environment:
       REGION: ${self:provider.region}
       KINESIS_STREAM: !Ref KinesisStream
 
   consumer:
     name: ${self:custom.baseName}-consumer
-    handler: src/consumer.handler
+    handler: src/consumer/index.handler
     events:
       - stream:
           type: kinesis
@@ -82,6 +89,8 @@ functions:
 resources:
   Resources:
 
+    # Kinesis
+
     KinesisStream:
       Type: AWS::Kinesis::Stream
       Properties:
@@ -89,5 +98,7 @@ resources:
         RetentionPeriodHours: 24
         ShardCount: 2
 
+    # SQS 
+    
     RecordsDLQ:
       Type: AWS::SQS::Queue
