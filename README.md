@@ -1,4 +1,4 @@
-# Generic Kinesis Pipeline
+# Kinesis Data Stream Pipeline
 
 ## Info 
 
