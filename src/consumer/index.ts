@@ -1,12 +1,17 @@
-import {KinesisStreamHandler, KinesisStreamRecord} from 'aws-lambda/trigger/kinesis-stream';
-import {Context} from 'aws-lambda';
+import {KinesisStreamEvent, KinesisStreamRecord} from 'aws-lambda/trigger/kinesis-stream';
+import {logger} from '../common/logger';
+import {Event} from '../types/interfaces';
 
-export const handler: KinesisStreamHandler = async (event, context?: Context) => {
-    console.log('Event', {event});
+async function handler (event: KinesisStreamEvent): Promise<void> {
+    logger.info('event :', {event});
 
-    event.Records.forEach((record: KinesisStreamRecord, index: number) => {
-        const data = JSON.parse(Buffer.from(record.kinesis.data, 'base64').toString('utf-8'));
-        console.log('data', {data});
-        /// do whatever
+    const records: Event[][] = event.Records.map((record: KinesisStreamRecord) => {
+        return JSON.parse(Buffer.from(record.kinesis.data, 'base64').toString('utf-8'));
     });
+
+    logger.info(`Records ${records.length} parsed :`, {records});
+
+    // throw new Error('trigger sqs destinations')
 };
+
+export {handler};

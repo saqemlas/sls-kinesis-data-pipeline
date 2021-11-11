@@ -5,11 +5,13 @@ variablesResolutionMode: 20210326
 package:
   individually: true
   patterns:
+    - 'src/**'
     - '!node_modules/**'
     - '!.serverless/**'
 
 plugins:
   - serverless-esbuild
+  - serverless-s3-cleaner
   - serverless-iam-roles-per-function
 
 custom:
@@ -37,10 +39,12 @@ provider:
     blockPublicAccess: true
   runtime: nodejs14.x
   memorySize: 128
-  timeout: 60
+  timeout: 30
   versionFunctions: false
-  logRetentionInDays: 30
+  logRetentionInDays: 7
   environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    NODE_OPTIONS: "--enable-source-maps"
     LOG_LEVEL: info
   iam:
     role:
@@ -48,43 +52,48 @@ provider:
       statements:
         - Effect: Allow
           Action:
-            - kinesis:PutRecord
-          Resource: !GetAtt KinesisStream.Arn
-        - Effect: Allow
-          Action:
             - logs:CreateLogGroup
             - logs:CreateLogStream
             - logs:PutLogEvents
           Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*:log-stream:*
-
+        - Effect: Allow
+          Action:
+            - kinesis:PutRecords
+          Resource: !Sub arn:aws:kinesis:${AWS::Region}:${AWS::AccountId}:stream/${self:custom.baseName}-stream
+        - Effect: Allow
+          Action: sqs:SendMessage
+          Resource: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${self:custom.baseName}-dlq
 
 functions:
   producer:
     name: ${self:custom.baseName}-producer
     handler: src/producer/index.handler
+    maximumRetryAttempts: 1 # (0-2)
+    maximumEventAge: 7200 # (60-21600)
     environment:
-      REGION: ${self:provider.region}
-      KINESIS_STREAM: !Ref KinesisStream
+      KINESIS_STREAM: ${self:custom.baseName}-stream
 
   consumer:
     name: ${self:custom.baseName}-consumer
     handler: src/consumer/index.handler
+    maximumRetryAttempts: 1 # (0-2)
+    maximumEventAge: 7200 # (60-21600)
     events:
       - stream:
           type: kinesis
           arn: !GetAtt KinesisStream.Arn
+          consumer: true # kinesis stream consumer
           startingPosition: LATEST
-          parallelizationFactor: 5
-          batchSize: 100
+          parallelizationFactor: 1 # max 10
           batchWindow: 5
-          maximumRetryAttempts: 5
+          batchSize: 10 # if greater, maximumBatchingWindowInSeconds required
+          # maximumBatchingWindowInSeconds: 1
+          maximumRetryAttempts: 1 # max 2
           bisectBatchOnFunctionError: true
           functionResponseType: ReportBatchItemFailures
-          # maximumRecordAgeInSeconds: 120
-          destinations:
-            onFailure:
-              type: sqs
-              arn: !GetAtt RecordsDLQ.Arn
+          maximumRecordAgeInSeconds: 120
+          tumblingWindowInSeconds: 60
+    onError: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${self:custom.baseName}-dlq
 
 resources:
   Resources:
@@ -94,11 +103,13 @@ resources:
     KinesisStream:
       Type: AWS::Kinesis::Stream
       Properties:
-        Name: ${self:custom.baseName}
+        Name: ${self:custom.baseName}-stream
         RetentionPeriodHours: 24
         ShardCount: 2
 
     # SQS 
     
-    RecordsDLQ:
+    DeadLetterQueue:
       Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.baseName}-dlq

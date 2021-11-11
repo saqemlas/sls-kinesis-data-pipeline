@@ -14,11 +14,11 @@ When putting data into the stream, the partition key is used to determine which 
 
 For more information...
 - [AWS Documentation: Kinesis Data Streams](https://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-streams.html)
-- [AWS Documentation: Kinesis Producers](https://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-producers.html)
-- [AWS Documentation: Kinesis Consumers](https://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-consumers.html)
-- [Api Reference: PutRecord](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html)
+- [AWS Documentation: Reading Data from Amazon Kinesis Data Streams](https://docs.aws.amazon.com/streams/latest/dev/building-consumers.html)
+- [AWS Documentation: Error handling and automatic retries in AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/invocation-retries.html)
+- [Api Reference: PutRecords](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecords.html)
+- [AWS Documentatin: SQS Dead Letter Queues](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html)
 - [Serverless Framework: Kinesis Events](https://www.serverless.com/framework/docs/providers/aws/events/streams)
-- [Serverless Framework: Lambda Functions](https://www.serverless.com/framework/docs/providers/aws/guide/functions)
 
 ## Architecture
 
