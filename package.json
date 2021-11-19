@@ -1,5 +1,5 @@
 {
-  "name": "@aws-template/aws-kinesis-pipeline",
+  "name": "@aws-template/aws-kinesis-lambda-pipeline",
   "version": "1.0.0",
   "license": "UNLICENSED",
   "scripts": {

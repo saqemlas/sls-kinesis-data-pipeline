@@ -1,4 +1,4 @@
-service: dataPipeline
+service: streampipeline
 
 variablesResolutionMode: 20210326
 
@@ -15,7 +15,7 @@ plugins:
   - serverless-iam-roles-per-function
 
 custom:
-  project: awsTemplate
+  project: template
   baseName: ${self:custom.project}-${self:service}-${self:provider.stage}
 
   esbuild:
